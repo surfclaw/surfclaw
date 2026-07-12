@@ -1,0 +1,6 @@
+{
+  "summary":  "Updated SurfLLM Architecture Specification integrating ZeroMQ (ØMQ) as the high-speed brokerless asynchronous messaging fabric for AstraFlow distributed training and Vortex speculative serving.",
+  "updatedAt":  "2026-06-20T10:03:03.065282800Z",
+  "requestFeedback":  true,
+  "userFacing":  true
+}
