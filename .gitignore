@@ -35,6 +35,9 @@ MANIFEST
 .env.development.local
 .env.test.local
 .env.production.local
+website/ai_docs/logs/
+*.jsonl
+*.log
 
 # 운영체제 및 IDE 설정 파일 제외
 .vscode/
@@ -43,29 +46,14 @@ MANIFEST
 *.ntvs*
 *.njsproj
 *.sln
-*.swp
-.DS_Store
-Thumbs.db
+*.sw?
 
-# AIOS 커널 및 로컬 스토리지 임시 데이터 폴더 제외
-aios_root/
-aios.log
-*.db
-*.sqlite
-logs/
-.system_generated/
-
-
-# Added by cargo
+# Rust 컴파일 타겟 및 메인 빌드 산출물 제외
 /target
+Cargo.lock
+/openssl/
 
-# 비텐서 지갑 개인키 및 크레덴셜 비밀 파일 제외 (핵심 보안 강화)
-*key.json
-*.pem
-*.key
-*.pk
-.credentials/
-credentials.json
-secrets.json
-*.secret
-
+# OS 생성 캐시 파일 제외
+Thumbs.db
+ehthumbs.db
+Desktop.ini
