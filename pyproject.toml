@@ -1,0 +1,14 @@
+[build-system]
+requires = ["maturin>=1.0,<2.0"]
+build-backend = "maturin"
+
+[project]
+name = "surfclaw_core"
+version = "0.1.0"
+description = "High-Performance Rust Core for Surfclaw GPU DePIN Mining Accelerator"
+requires-python = ">=3.7"
+readme = "README.md"
+license = { text = "MIT" }
+
+[tool.maturin]
+features = ["pyo3/extension-module"]
