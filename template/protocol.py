@@ -1,11 +1,11 @@
 from typing import List, Dict, Any, Optional
 from pydantic import BaseModel, Field
 
-# bittensor check & fallback setup
+import os
+
 try:
     import bittensor as bt
-
-    HAS_BITTENSOR = True
+    HAS_BITTENSOR = os.environ.get("FORCE_MOCK", "0") != "1"
 except ImportError:
     HAS_BITTENSOR = False
 
@@ -46,8 +46,11 @@ if HAS_BITTENSOR:
 
         def deserialize(self) -> str:
             return self.response_output or ""
+
+        def get_schema_json(self) -> str:
+            import json
+            return json.dumps(self.model_json_schema())
 else:
-    # Mock fallback definitions
     class DendriteCallResult(BaseModel):
         status_code: int = 200
         status_message: str = "Success"
@@ -63,9 +66,7 @@ else:
             arbitrary_types_allowed = True
 
     class AgentExecutionSynapse(Synapse):
-        """
-        AgentExecutionSynapse defines the communication protocol (Mock Fallback).
-        """
+        """Mock Synapse execution class."""
 
         agent_name: str
         task_input: str
@@ -80,6 +81,10 @@ else:
         def deserialize(self) -> str:
             return self.response_output or ""
 
+        def get_schema_json(self) -> str:
+            import json
+            return json.dumps(self.model_json_schema())
+
     class MockAxon:
         def __init__(self, wallet=None, port=None, ip=None):
             self.wallet = wallet
@@ -92,33 +97,36 @@ else:
             return self
 
         def start(self):
-            print(f"[Mock Axon] Axon Server started on port {self.port}.")
             return self
 
         def stop(self):
-            print("[Mock Axon] Stopping Axon Server.")
             return self
-
-    class MockDendrite:
-        def __init__(self, wallet=None):
-            self.wallet = wallet
-
-        def query(
-            self, axons: Any, synapse: AgentExecutionSynapse, timeout: float = 12.0
-        ) -> Any:
-            return synapse
 
     class MockWallet:
         def __init__(self, name="default", hotkey="default"):
-            self.wallet_name = name
+            self.name = name
             self.hotkey = hotkey
 
     class MockSubtensor:
         def __init__(self, network="mock"):
             self.network = network
 
+        def metagraph(self, netuid):
+            return MockMetagraph(netuid=netuid)
+
     class MockMetagraph:
         def __init__(self, netuid=99):
             self.netuid = netuid
-            self.uids = list(range(10))
-            self.axons = [MockAxon(port=8000 + i) for i in range(10)]
+            self.uids = [0]
+            self.axons = {0: MockAxon(port=8000, ip="127.0.0.1")}
+
+    class MockDendrite:
+        def __init__(self, wallet=None):
+            self.wallet = wallet
+
+        def query(self, axon, synapse, timeout=12.0):
+            from neurons.miner import SurfclawMiner
+            miner = SurfclawMiner()
+            result = miner.forward(synapse)
+            miner.stop()
+            return result
