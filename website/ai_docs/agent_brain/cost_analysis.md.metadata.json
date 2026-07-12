@@ -1,0 +1,6 @@
+{
+  "summary":  "SurfLLM cost analysis report detailing SFT and PRIME-RL training compute costs, and CMU Vortex/ZeroMQ optimized serving unit costs compared to DeepSeek. Prove how we achieve high profitability and zero debt.",
+  "updatedAt":  "2026-06-20T10:04:41.141318700Z",
+  "requestFeedback":  true,
+  "userFacing":  true
+}
