@@ -6,9 +6,8 @@ import threading
 import logging
 from typing import Any
 
-# surfclaw_core 라이브러리 임포트 검증
 try:
-    import surfclaw_core  # noqa: F401
+    import surfclaw_core
     from surfclaw_core import PyScheduler, PyFirecrackerClient, PyMcpClient, PySapParser, PyBitsecBridge
 
     HAS_RUST_CORE = True
@@ -26,7 +25,8 @@ logger = logging.getLogger("SurfclawKernel")
 
 class SurfclawKernelWrapper:
     """
-    Rust 기반 surfclaw_core 가속 엔진과 Python 비텐서 노드 간의 비동기 브릿지 및 자원 스케줄링 커널 클래스.
+    Asynchronous bridge class connecting Python Bittensor nodes with the 
+    Rust-native surfclaw_core acceleration and scheduling engine.
     """
 
     def __init__(self, use_real_kernel: bool = False, model_name: str = "mock-llm"):
@@ -37,11 +37,8 @@ class SurfclawKernelWrapper:
         self.scheduler_thread = None
         self.running = False
         self.lock = threading.Lock()
-
-        # Task ID -> (synapse, callback, start_time) 매핑 테이블
         self.callbacks = {}
 
-        # 16.0 GB VRAM 용량 제한의 Rust 스케줄러 및 BitsecBridge 초기화
         if HAS_RUST_CORE:
             self.scheduler = PyScheduler(16.0)
             self.bitsec_bridge = PyBitsecBridge("https://api.bitsec.ai/v1/telemetry", "surfclaw_miner_hotkey_01")
@@ -49,11 +46,10 @@ class SurfclawKernelWrapper:
                 "[Rust Core] Successfully initialized PyScheduler (16.0GB limit) and PyBitsecBridge."
             )
         else:
-            # Fallback 용 큐
             self.fallback_queue = queue.Queue()
 
     def start(self):
-        """스케줄러 디스패치 스레드를 시작합니다."""
+        """Starts the scheduler dispatch thread."""
         self.running = True
         self.scheduler_thread = threading.Thread(
             target=self._scheduler_loop, daemon=True
@@ -63,22 +59,19 @@ class SurfclawKernelWrapper:
 
     def _scheduler_loop(self):
         """
-        Rust 코어 스케줄러로부터 태스크를 꺼내 멀티스레드로 분기 처리하는 메인 루프.
+        Main loop pulling tasks from Rust core scheduler and dispatching them.
         """
         while self.running:
             if HAS_RUST_CORE and self.scheduler is not None:
-                # Rust 스케줄러 큐로부터 FIFO 대기열 태스크 획득 (1000ms 타임아웃)
                 task = self.scheduler.dispatch_fifo(1000)
                 if task is None:
                     continue
 
-                # 에이전트 구동을 개별 워커 스레드로 분기하여 처리 (병렬성 극대화)
                 worker = threading.Thread(
                     target=self._execute_task, args=(task,), daemon=True
                 )
                 worker.start()
             else:
-                # Fallback Simulated Mode
                 try:
                     task_request = self.fallback_queue.get(timeout=1.0)
                 except queue.Empty:
@@ -88,9 +81,8 @@ class SurfclawKernelWrapper:
 
     def _execute_task(self, task):
         """
-        Rust 스케줄러로부터 할당받은 에이전트 작업을 실제로 수행하는 워커 로직.
+        Worker logic performing task execution dispatched by the Rust scheduler.
         """
-        # 1. 태스크 메타데이터 획득
         with self.lock:
             callback_info = self.callbacks.get(task.id)
         if not callback_info:
@@ -105,9 +97,7 @@ class SurfclawKernelWrapper:
             }
         )
 
-        # 2. AWS Firecracker Sandbox 격리 구동 시뮬레이션
         try:
-            # 소켓 연결 설정 및 기동
             fc = PyFirecrackerClient("/tmp/firecracker.socket")
             fc.set_boot_source("/tmp/vmlinux", "console=ttyS0 reboot=k panic=1 pci=off")
             fc.set_root_drive("/tmp/rootfs.ext4")
@@ -126,11 +116,9 @@ class SurfclawKernelWrapper:
                 }
             )
 
-        # 3. Anthropic MCP 도구 연결 기동 시뮬레이션
         if task.tools:
             try:
                 mcp = PyMcpClient()
-                # Stdio 기반으로 MCP 서버 서브프로세스 기동 모사
                 mcp.start("python", ["--version"])
                 mcp.initialize()
                 trace.append(
@@ -155,16 +143,12 @@ class SurfclawKernelWrapper:
                     }
                 )
 
-        # 4. LLM 추론 수행
         llm_result = self._call_real_llm(task.task_input)
 
-        # 5. BAML식 SAP(Schema-Aligned Parsing) 및 어설션 검증
         parsed_output = llm_result
         try:
             if "{" in llm_result:
-                # JSON 구문 자동 정정 및 정규식 추출
                 parsed_output = PySapParser.parse_json(llm_result)
-                # BAML @assert 타입 검사 모사
                 PySapParser.assert_field(parsed_output, "success", "boolean")
                 trace.append(
                     {
@@ -187,17 +171,13 @@ class SurfclawKernelWrapper:
             }
         )
 
-        # 6. 연산 시간 계산 및 리소스 반납
         end_time = time.time()
         exec_time = end_time - start_time
         exec_time_ms = int(exec_time * 1000)
 
-        # 7. Bitsec (Subnet 60) 보안 텔레메트리 실시간 리포팅 실행
         if HAS_RUST_CORE and self.bitsec_bridge is not None:
             try:
-                # 시뮬레이션 데이터 추출 (실제로는 LLM 구문 분석이나 입력 코드 분석 결과 이용)
                 code_len = len(task.task_input)
-                # mock json 결과인 경우 취약점 수 파악
                 vuln_count = 0
                 max_sev = "None"
                 if "vulnerabilities" in parsed_output:
@@ -210,7 +190,6 @@ class SurfclawKernelWrapper:
                     except:
                         pass
                 
-                # Rust 브릿지로 텔레메트리 전송
                 session_id = self.bitsec_bridge.report_audit_telemetry(
                     code_len, vuln_count, max_sev, exec_time_ms
                 )
@@ -228,14 +207,12 @@ class SurfclawKernelWrapper:
                     }
                 )
 
-        # 결과 데이터 탑재
         synapse.response_output = f"[Surfclaw Completed] Result:\n{parsed_output}"
         synapse.execution_trace = trace
         synapse.execution_time = exec_time
         synapse.memory_usage = 1024 * 1024 * 64
         synapse.success = True
 
-        # Rust 스케줄러 자원 반환
         self.scheduler.release(
             task.id,
             task.agent_name,
@@ -245,14 +222,13 @@ class SurfclawKernelWrapper:
             task.vram_required,
         )
 
-        # 콜백 맵 정리 및 호출
         with self.lock:
             self.callbacks.pop(task.id, None)
 
         callback(synapse)
 
     def _execute_fallback_task(self, synapse, callback, start_time):
-        """Rust 코어 부재 시의 모의 폴백 실행 루틴."""
+        """Simulated execution routine used in case Rust core is absent."""
         wait_time = time.time() - start_time
         time.sleep(0.1)
         synapse.response_output = f"[Fallback Simulated Output] Success without Rust core: '{synapse.task_input[:30]}...'"
@@ -261,7 +237,7 @@ class SurfclawKernelWrapper:
         callback(synapse)
 
     def submit_task(self, synapse: Any, callback: Any):
-        """마이너가 요청을 수신하면 스케줄러에 작업을 등록합니다."""
+        """Enrolls a validation request task into the scheduling queue."""
         if not self.running:
             raise RuntimeError("Surfclaw Scheduler is not running.")
 
@@ -272,7 +248,6 @@ class SurfclawKernelWrapper:
             self.callbacks[task_id] = (synapse, callback, start_time)
 
         if HAS_RUST_CORE and self.scheduler is not None:
-            # Rust 스케줄러 큐에 작업 전송 (가상 VRAM 요구치 2.0GB 지정)
             self.scheduler.submit(
                 task_id, synapse.agent_name, synapse.task_input, synapse.tools, 2.0
             )
@@ -280,10 +255,9 @@ class SurfclawKernelWrapper:
             self.fallback_queue.put((synapse, callback, start_time))
 
     def _call_real_llm(self, prompt: str) -> str:
-        """API Key가 있으면 실제 GPT API를, 없으면 모의 응답을 반환합니다."""
+        """Returns actual GPT response or mock parsing text."""
         api_key = os.getenv("OPENAI_API_KEY")
         if not api_key:
-            # BAML SapParser를 테스트하기 위해 JSON 형태의 문자열을 포함하여 모의 반환을 해줍니다.
             return f'{{\n  "success": true,\n  "message": "[Mock] Prompt received: \'{prompt[:30]}\'"\n}}'
 
         try:
@@ -316,6 +290,6 @@ class SurfclawKernelWrapper:
             )
 
     def stop(self):
-        """스케줄러를 중단합니다."""
+        """Stops the scheduler loop."""
         self.running = False
         logger.info("[SurfclawKernel] Surfclaw Scheduler wrapper stopped.")
