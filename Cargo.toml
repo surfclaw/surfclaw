@@ -1,0 +1,16 @@
+[package]
+name = "surfclaw"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+name = "surfclaw_core"
+crate-type = ["cdylib"]
+
+[dependencies]
+pyo3 = { version = "0.21", features = ["extension-module"] }
+tokio = { version = "1", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+regex = "1.10"
+lazy_static = "1.4"
