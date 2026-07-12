@@ -36,6 +36,7 @@ MANIFEST
 .env.test.local
 .env.production.local
 website/ai_docs/logs/
+website/scratch/
 *.jsonl
 *.log
 
