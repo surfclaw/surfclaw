@@ -31,8 +31,8 @@
 ---
 
 ## 3. 최종 완성 소스코드 파일 구조
-*   **Rust 핵심 커널**: [scheduler.rs](file:///c:/Users/YG/Desktop/success/surfclaw/src/scheduler.rs), [lib.rs](file:///c:/Users/YG/Desktop/success/surfclaw/src/lib.rs), [firecracker.rs](file:///c:/Users/YG/Desktop/success/surfclaw/src/firecracker.rs), [mcp.rs](file:///c:/Users/YG/Desktop/success/surfclaw/src/mcp.rs), [parser.rs](file:///c:/Users/YG/Desktop/success/surfclaw/src/parser.rs)
-*   **파이썬 커널 래퍼**: [aios_wrapper.py](file:///c:/Users/YG/Desktop/success/surfclaw/template/aios_wrapper.py)
-*   **비텐서 노드 인터페이스**: [miner.py](file:///c:/Users/YG/Desktop/success/surfclaw/neurons/miner.py), [validator.py](file:///c:/Users/YG/Desktop/success/surfclaw/neurons/validator.py)
-*   **로컬 시뮬레이터**: [test_subnet_local.py](file:///c:/Users/YG/Desktop/success/surfclaw/tests/test_subnet_local.py)
-*   **프로젝트 공식 기획문**: [README.md](file:///c:/Users/YG/Desktop/success/surfclaw/README.md), [pitch_deck_content.md](file:///C:/Users/YG/.gemini/antigravity/brain/5020288b-7641-4c90-b553-182f4bf50a5e/pitch_deck_content.md), [whitepaper_incentive_mechanism.md](file:///C:/Users/YG/.gemini/antigravity/brain/5020288b-7641-4c90-b553-182f4bf50a5e/whitepaper_incentive_mechanism.md)
+*   **Rust 핵심 커널**: [scheduler.rs](src/scheduler.rs), [lib.rs](src/lib.rs), [firecracker.rs](src/firecracker.rs), [mcp.rs](src/mcp.rs), [parser.rs](src/parser.rs)
+*   **파이썬 커널 래퍼**: [aios_wrapper.py](template/aios_wrapper.py)
+*   **비텐서 노드 인터페이스**: [miner.py](neurons/miner.py), [validator.py](neurons/validator.py)
+*   **로컬 시뮬레이터**: [test_subnet_local.py](tests/test_subnet_local.py)
+*   **프로젝트 공식 기획문**: [README.md](README.md), [pitch_deck_content.md](pitch_deck_content.md), [whitepaper_incentive_mechanism.md](whitepaper_incentive_mechanism.md)
