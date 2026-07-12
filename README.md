@@ -99,10 +99,4 @@ JSON Syntax Corruption → Unhandled LLM anomalies → Zero Score Penalties
 [Surfclaw Kernel]
 Rust Async Scheduler → GIL bypass via async IO loop → Ultra-Low Latency
 SapParser → Real-time microsecond-level JSON self-healing → 100% Valid Payloads
-
----
-
-## 🔮 The Grand Vision: Decentralized Devin Alternative (OpenHands + Firecracker)
-
-Surfclaw aims to disrupt the proprietary autonomous software engineering market (e.g., Cognition Devin) by hosting **OpenHands** agents inside ultra-lightweight **AWS Firecracker MicroVMs** across a decentralized DePIN computing network. By leveraging distributed crowdsourced node compute, Surfclaw drops platform hosting costs to **$0**, delivering the most cost-effective, zero-trust autonomous coder network in the Web3 space.
 ```
