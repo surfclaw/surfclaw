@@ -47,14 +47,31 @@ website/scratch/
 *.ntvs*
 *.njsproj
 *.sln
-*.sw?
-
-# Rust 컴파일 타겟 및 메인 빌드 산출물 제외
-/target
-Cargo.lock
-/openssl/
-
-# OS 생성 캐시 파일 제외
+*.swp
+.DS_Store
 Thumbs.db
-ehthumbs.db
-Desktop.ini
+
+# AIOS 커널 및 로컬 스토리지 임시 데이터 폴더 제외
+aios_root/
+aios.log
+*.db
+*.sqlite
+logs/
+.system_generated/
+
+
+# Added by cargo
+/target
+
+# 비텐서 지갑 개인키 및 크레덴셜 비밀 파일 제외 (핵심 보안 강화)
+*key.json
+*.pem
+*.key
+*.pk
+.credentials/
+credentials.json
+secrets.json
+*.secret
+
+# AI 에이전트 전용 프라이빗 훈육 규칙 및 상태 차단 (보안/사생활)
+.agents/
