@@ -3,11 +3,12 @@ import os
 import time
 import argparse
 
-# 프로젝트 루트 경로 추가
 current_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.dirname(current_dir)
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
+
+os.environ["FORCE_MOCK"] = "1"
 
 from neurons.validator import SurfclawValidator  # noqa: E402
 from neurons.miner import SurfclawMiner  # noqa: E402
@@ -34,7 +35,6 @@ def main():
     print("[INFO] [Local Simulator] Surfclaw Simulation starts.")
     print("----------------------------------------------------------------------")
 
-    # 로컬 실행을 위한 커맨드 인자 모사
     parser = argparse.ArgumentParser(conflict_handler="resolve")
     SurfclawValidator.add_args(parser)
     SurfclawMiner.add_args(parser)
@@ -50,7 +50,6 @@ def main():
     print("   -> Testing Surfclaw Scheduler queuing and VRAM optimization...")
     print("----------------------------------------------------------------------")
 
-    # validator.forward() 실행
     start_time = time.time()
     validator.forward()
     total_time = time.time() - start_time
