@@ -16,6 +16,7 @@ if project_root not in sys.path:
 from template.base.miner import BaseMinerNeuron  # noqa: E402
 from template.protocol import AgentExecutionSynapse  # noqa: E402
 from template.surfclaw_kernel import SurfclawKernelWrapper  # noqa: E402
+from template.memory import MinerMemoryStore, compute_task_hash, ExecutionRecord  # noqa: E402
 
 
 class SurfclawMiner(BaseMinerNeuron):
@@ -35,6 +36,11 @@ class SurfclawMiner(BaseMinerNeuron):
         self.surfclaw_kernel.start()
         self.logger.info(
             "[Miner] Surfclaw Kernel Wrapper initialized."
+        )
+
+        self.memory_store = MinerMemoryStore()
+        self.logger.info(
+            f"[Miner] Persistent Memory Store initialized. Current Stats: {self.memory_store.stats()}"
         )
 
     @classmethod
@@ -57,12 +63,39 @@ class SurfclawMiner(BaseMinerNeuron):
             f"[Miner] Processing query: Agent={synapse.agent_name} | Task={synapse.task_input[:40]}..."
         )
 
+        # 1. 캐시 히트 검사 (DeepAgents Persistent Memory 패턴)
+        task_hash = compute_task_hash(synapse.task_input, synapse.agent_name)
+        cached_record = self.memory_store.lookup_by_task(task_hash)
+        if cached_record is not None:
+            self.logger.info(
+                f"[Miner] [Cache Hit] Found cached result in MinerMemoryStore (Record ID: {cached_record.record_id[:8]})"
+            )
+            synapse.response_output = cached_record.response_output
+            synapse.success = True
+            synapse.execution_time = 0.001  # 즉각 응답
+            return synapse
+
+        # 2. 캐시 미스 시 실제 실행
         completion_event = threading.Event()
 
         def on_execution_complete(completed_synapse: AgentExecutionSynapse):
             self.logger.info(
                 f"[Miner] Task completed: {synapse.agent_name} | Time: {completed_synapse.execution_time:.3f}s"
             )
+            # 실행 성공 시 캐시 저장소에 업서트
+            if completed_synapse.success:
+                record = ExecutionRecord(
+                    task_input_hash=task_hash,
+                    agent_name=completed_synapse.agent_name,
+                    response_output=completed_synapse.response_output,
+                    execution_time=completed_synapse.execution_time,
+                    memory_usage=completed_synapse.memory_usage,
+                    success=True,
+                )
+                self.memory_store.upsert(record)
+                self.logger.info(
+                    f"[Miner] [Cache Saved] Execution cache saved to MinerMemoryStore (Record ID: {record.record_id[:8]})"
+                )
             completion_event.set()
 
         self.surfclaw_kernel.submit_task(synapse, on_execution_complete)
