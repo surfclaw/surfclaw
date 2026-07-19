@@ -35,7 +35,8 @@ MANIFEST
 .env.development.local
 .env.test.local
 .env.production.local
-website/ai_docs/logs/
+# [2026-07-19 보안 수정] ai_docs 전체 폴더 차단 (logs만 차단했던 실수 수정)
+website/ai_docs/
 website/scratch/
 *.jsonl
 *.log
