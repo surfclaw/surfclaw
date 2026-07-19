@@ -14,14 +14,13 @@ else:
 
 class BaseValidatorNeuron(BaseNeuron):
     """
-    비텐서 검증자 노드의 기반 클래스.
-    Dendrite 클라이언트를 사용해 마이너에게 테스트 쿼리를 전송하고 스코어링을 통해 가중치를 매깁니다.
+    Base class for Bittensor validators.
+    Uses Dendrite to query miners and submit weights based on task evaluations.
     """
 
     def __init__(self, parser: Optional[argparse.ArgumentParser] = None):
         super().__init__(parser)
 
-        # Dendrite 인스턴스 초기화
         if HAS_BITTENSOR:
             self.dendrite = bt.dendrite(wallet=self.wallet)
         else:
@@ -36,25 +35,21 @@ class BaseValidatorNeuron(BaseNeuron):
             "--validator_loop_interval",
             type=int,
             default=300,
-            help="검증 루프의 한 주기 속도 (초)",
+            help="Interval between validation rounds in seconds.",
         )
 
     def run(self):
-        """검증자 실행 루프"""
         self.logger.info("Starting validator node...")
         self.is_running = True
 
         try:
             while self.is_running:
-                # 주기적인 메타그래프 동기화
                 if self.should_sync():
                     self.sync()
 
-                # 검증 작업 실행 및 가중치 제출
                 self.logger.info(f"Validator running step: {self.step}")
                 self.forward()
 
-                # 지정된 인터벌만큼 대기
                 time.sleep(self.config.validator_loop_interval)
                 self.step += 1
 
@@ -67,10 +62,8 @@ class BaseValidatorNeuron(BaseNeuron):
             self.stop()
 
     def stop(self):
-        """검증자 종료"""
         self.is_running = False
         self.logger.info("Validator node stopped.")
 
-    # 하위 클래스에서 실제 평가 로직을 작성
     def forward(self):
         raise NotImplementedError("Validator must implement forward method.")
