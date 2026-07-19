@@ -97,10 +97,22 @@ else:
             return self
 
         def start(self):
+            print(f"[Mock Axon] Axon Server started on port {self.port}.")
             return self
 
         def stop(self):
+            print("[Mock Axon] Stopping Axon Server.")
             return self
+
+    class MockDendrite:
+        def __init__(self, wallet=None):
+            self.wallet = wallet
+
+        def query(
+            self, axons: Any, synapse: AgentExecutionSynapse, timeout: float = 12.0
+        ) -> Any:
+            # Local execution emulation
+            return synapse
 
     class MockWallet:
         def __init__(self, name="default", hotkey="default"):
@@ -111,22 +123,8 @@ else:
         def __init__(self, network="mock"):
             self.network = network
 
-        def metagraph(self, netuid):
-            return MockMetagraph(netuid=netuid)
-
     class MockMetagraph:
         def __init__(self, netuid=99):
             self.netuid = netuid
-            self.uids = [0]
-            self.axons = {0: MockAxon(port=8000, ip="127.0.0.1")}
-
-    class MockDendrite:
-        def __init__(self, wallet=None):
-            self.wallet = wallet
-
-        def query(self, axon, synapse, timeout=12.0):
-            from neurons.miner import SurfclawMiner
-            miner = SurfclawMiner()
-            result = miner.forward(synapse)
-            miner.stop()
-            return result
+            self.uids = list(range(10))
+            self.axons = [MockAxon(port=8000 + i) for i in range(10)]
