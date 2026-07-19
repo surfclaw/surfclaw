@@ -2,9 +2,9 @@
 # Copyright © 2023 Yuma Rao
 # Copyright © 2026 Surfclaw
 
-import sys
-import os
 import argparse
+import os
+import sys
 import threading
 from typing import Optional
 
