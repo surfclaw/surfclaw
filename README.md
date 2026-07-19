@@ -100,3 +100,46 @@ JSON Syntax Corruption → Unhandled LLM anomalies → Zero Score Penalties
 Rust Async Scheduler → GIL bypass via async IO loop → Ultra-Low Latency
 SapParser → Real-time microsecond-level JSON self-healing → 100% Valid Payloads
 ```
+
+---
+
+## 🗺️ Phase 2 Technical Roadmap (Kernel Optimizations)
+
+For high-concurrency production networks, Surfclaw is preparing to implement the following system-level optimizations:
+
+1. **Linux `io_uring` UDS Comm Acceleration (`monoio`/`glommio`)**
+   * Bypasses Linux kernel context switching overhead during Firecracker REST API controls.
+2. **Lock-Free Atomic Work Queues (`crossbeam`)**
+   * Eliminates Mutex contention in the scheduler queues to support hyper-threaded miner requests.
+3. **SIMD-Accelerated SapParser (`std::simd`)**
+   * Compiles JSON repair regexes directly into CPU SIMD instruction registers for nanosecond parsing.
+
+---
+
+## 🌐 Phase 3 Multi-Network DePIN Expansion
+
+Surfclaw's scheduler and MicroVM isolation model function as an independent middleware layer. We plan to expand optimization services to other major decentralized AI networks:
+
+1. **Morpheus Network (Smart Contract Agent Acceleration)**
+   * Integrates the Rust kernel to speed up off-chain reasoning agent workloads.
+2. **Akash Network (Dynamic VRAM Allocation)**
+   * Manages VRAM allocation limits and eliminates scheduler delays for multi-agent Akash containers.
+3. **Livepeer AI Subnet (Video Diffusion Scheduling)**
+   * Optimizes highly concurrent video rendering pipelines requiring large-scale VRAM distribution.
+
+---
+
+## 📈 Market Size & Business Potential
+
+Surfclaw targets the rapidly growing decentralized compute and AI agent marketplace:
+
+*   **TAM (Total Addressable Market) - $15.0 Billion**:
+    * Global decentralized GPU renting and Web3 DePIN infrastructure market size.
+*   **SAM (Serviceable Addressable Market) - $2.8 Billion**:
+    * Decentralized AI agent networks and Bittensor-class mining subnets.
+*   **SOM (Serviceable Obtainable Market) - $150 Million**:
+    * Initial target capture of Bittensor subnet mining middleware deployments.
+
+---
+
+Released under the [MIT License](LICENSE).
