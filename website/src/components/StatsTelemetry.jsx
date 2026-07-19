@@ -10,8 +10,8 @@ export default function StatsTelemetry() {
 
   // Real-time activity logs
   const [logs, setLogs] = React.useState([
-    { id: 1, node: 'Subnet 60 Miner #24', action: 'SapParser Auto-Heal (JSON)', saving: 'Saved 276ms', time: '2s ago' },
-    { id: 2, node: 'Subnet 60 Miner #89', action: 'Bitsec Telemetry Streamed', saving: 'Saved 312ms', time: '14s ago' },
+    { id: 1, node: 'Subnet 60 Miner #24', action: 'Surfclaw AST Code Sanitized', saving: 'Secured [OK]', time: '2s ago' },
+    { id: 2, node: 'Subnet 60 Miner #89', action: 'Token Compressor Activated', saving: 'Tokens -72%', time: '14s ago' },
     { id: 3, node: 'Subnet 66 Miner #12', action: 'AWS Firecracker Boot (Clean)', saving: 'Saved 410ms', time: '1m ago' },
     { id: 4, node: 'Subnet 60 Miner #103', action: 'SapParser Syntax Recovered', saving: 'Saved 295ms', time: '3m ago' }
   ]);
@@ -38,14 +38,14 @@ export default function StatsTelemetry() {
         setHealedErrors(prev => prev + 1);
         
         const nodes = ['Subnet 60 Miner #45', 'Subnet 66 Miner #88', 'Subnet 60 Miner #19', 'Subnet 60 Miner #222'];
-        const actions = ['SapParser Auto-Heal (JSON)', 'Bitsec Telemetry Streamed', 'SapParser Syntax Recovered'];
-        const savings = [240, 310, 285, 340];
+        const actions = ['Surfclaw AST Code Sanitized', 'Token Compressor Activated', 'SapParser Syntax Recovered'];
+        const savings = ['Secured [OK]', 'Tokens -68%', 'Saved 280ms', 'Tokens -74%'];
         
         const newLog = {
           id: Date.now(),
           node: nodes[Math.floor(Math.random() * nodes.length)],
           action: actions[Math.floor(Math.random() * actions.length)],
-          saving: `Saved ${savings[Math.floor(Math.random() * savings.length)]}ms`,
+          saving: savings[Math.floor(Math.random() * savings.length)],
           time: 'Just now'
         };
         setLogs(prev => [newLog, ...prev.slice(0, 3)]);
@@ -60,7 +60,7 @@ export default function StatsTelemetry() {
   return (
     <section id="telemetry" style={{
       maxWidth: '1200px',
-      margin: '80px auto 0 auto',
+      margin: '0 auto 0 auto',
       padding: '0 24px'
     }}>
       <div style={{ textAlign: 'center', marginBottom: '40px' }}>
@@ -179,19 +179,19 @@ export default function StatsTelemetry() {
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
               <div style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: 'var(--accent-cyan)', marginTop: '8px' }} />
               <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.85rem', lineHeight: 1.4 }}>
-                <strong>No-Block Concurrency:</strong> By bypassing the Python GIL, validators receive responses instantly without thread lock bottlenecks.
+                <strong>Deterministic AST Audit:</strong> Local syntax tree parsing sanitizes incoming validator query scripts inside 1µs, neutralizing RCE hack vulnerabilities.
               </p>
             </div>
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
               <div style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: 'var(--accent-purple)', marginTop: '8px' }} />
               <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.85rem', lineHeight: 1.4 }}>
-                <strong>Syntax Recovery:</strong> Microsecond-level JSON repair ensures 100% formatted validation compliance.
+                <strong>SapParser Auto-Heal:</strong> Microsecond-level schema compliance healing resolves LLM response formatting errors automatically.
               </p>
             </div>
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
               <div style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: 'var(--accent-green)', marginTop: '8px' }} />
               <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.85rem', lineHeight: 1.4 }}>
-                <strong>Subnet 60 Compliance:</strong> Fully integrated Rust bridge pushes audit metrics to the security network seamlessly.
+                <strong>Boilerplate Token Compression:</strong> On-device Caveman-style payload compressor cuts down transmission overhead by up to 75%.
               </p>
             </div>
           </div>
