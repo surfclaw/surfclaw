@@ -63,7 +63,7 @@ class SurfclawMiner(BaseMinerNeuron):
             f"[Miner] Processing query: Agent={synapse.agent_name} | Task={synapse.task_input[:40]}..."
         )
 
-        # 1. 캐시 히트 검사 (DeepAgents Persistent Memory 패턴)
+        # 1. Check for cache hit (DeepAgents Persistent Memory pattern)
         task_hash = compute_task_hash(synapse.task_input, synapse.agent_name)
         cached_record = self.memory_store.lookup_by_task(task_hash)
         if cached_record is not None:
@@ -72,17 +72,17 @@ class SurfclawMiner(BaseMinerNeuron):
             )
             synapse.response_output = cached_record.response_output
             synapse.success = True
-            synapse.execution_time = 0.001  # 즉각 응답
+            synapse.execution_time = 0.001  # Immediate response
             return synapse
 
-        # 2. 캐시 미스 시 실제 실행
+        # 2. Cache miss: submit task to execution queue
         completion_event = threading.Event()
 
         def on_execution_complete(completed_synapse: AgentExecutionSynapse):
             self.logger.info(
                 f"[Miner] Task completed: {synapse.agent_name} | Time: {completed_synapse.execution_time:.3f}s"
             )
-            # 실행 성공 시 캐시 저장소에 업서트
+            # Save successful execution to memory store
             if completed_synapse.success:
                 record = ExecutionRecord(
                     task_input_hash=task_hash,
