@@ -1,19 +1,19 @@
 """
 Surfclaw Persistent Memory Module
 ==================================
-DeepAgents(langchain-ai/deepagents)의 실제 소스코드에서 추출한 핵심 패턴:
-  - _messages_delta_reducer: ID 기반 중복 제거 + tombstone 리셋
-  - pluggable state backends: 크로스세션 체크포인트
-를 LangChain/LangGraph 의존성 없이 순수 Python+Pydantic으로 구현.
+Core patterns extracted from deepagents (langchain-ai/deepagents):
+  - _messages_delta_reducer: ID-based deduplication + tombstone reset
+  - pluggable state backends: Cross-session check-pointing
+Implemented in pure Python & Pydantic without heavy LangChain dependencies.
 
 Why this design:
-  - 마이너가 동일한 task_input을 이미 실행한 경우 캐시에서 즉시 반환 → 레이턴시 0화
-  - Validator가 마이너 이력 기반으로 이상 패턴(표절/치팅) 탐지 가능
-  - 세션 재시작 후에도 이전 결과가 보존되어 서브넷 점수 연속성 유지
+  - If a miner executes the same task_input, it returns immediately from cache -> zero latency.
+  - Allows validators to trace anomalies (cheating/plagiarism) based on execution history.
+  - Keeps state across process restarts, ensuring subnet score continuity.
 
 License context:
   - DeepAgents: MIT License (langchain-ai/deepagents)
-  - 본 파일은 개념만 차용하고 코드는 100% 독자 구현 (LangChain 코드 미포함)
+  - This file borrows concepts only and is implemented from scratch (contains no LangChain code).
 """
 
 from __future__ import annotations
@@ -29,34 +29,34 @@ from pydantic import BaseModel, Field
 
 
 # ---------------------------------------------------------------------------
-# 1. 실행 레코드 스키마 (DeepAgents _messages_reducer 의 AnyMessage 대응)
+# 1. Execution Record Schema (Corresponds to AnyMessage in deepagents)
 # ---------------------------------------------------------------------------
 
 class ExecutionRecord(BaseModel):
-    """단일 마이너 실행 결과 레코드.
+    """Single miner execution result record.
 
-    DeepAgents의 AnyMessage를 Surfclaw 도메인에 맞게 재정의.
-    ID 기반 dedup을 위해 record_id가 반드시 필요하며, 재실행 시에도 동일 ID를
-    사용하면 최신 결과로 덮어씀 (tombstone이 아닌 upsert 방식).
+    Redefines AnyMessage from deepagents for the Surfclaw domain.
+    Requires record_id for ID-based deduplication. Re-writing with the same
+    ID overwrites the record with the latest result (upsert, not tombstone).
     """
 
     record_id: str = Field(
         default_factory=lambda: str(uuid.uuid4()),
-        description="고유 실행 레코드 ID. 동일 ID로 재기록 시 upsert 처리.",
+        description="Unique execution record ID. Upserts if rewritten with same ID.",
     )
     task_input_hash: str = Field(
         ...,
-        description="SHA256(task_input) — 동일 태스크 캐시 히트 키.",
+        description="SHA256(task_input) — cache key for identical tasks.",
     )
-    agent_name: str = Field(..., description="실행된 에이전트 이름.")
-    response_output: Optional[str] = Field(None, description="마이너 응답 결과.")
-    execution_time: float = Field(0.0, description="실행 시간(초).")
-    memory_usage: float = Field(0.0, description="피크 메모리 사용량(Bytes).")
-    success: bool = Field(False, description="성공 여부.")
-    timestamp: float = Field(default_factory=time.time, description="Unix 타임스탬프.")
+    agent_name: str = Field(..., description="Name of the executed agent.")
+    response_output: Optional[str] = Field(None, description="Miner output result.")
+    execution_time: float = Field(0.0, description="Execution time in seconds.")
+    memory_usage: float = Field(0.0, description="Peak memory usage in bytes.")
+    success: bool = Field(False, description="Whether execution was successful.")
+    timestamp: float = Field(default_factory=time.time, description="Unix timestamp.")
     tombstone: bool = Field(
         False,
-        description="True이면 해당 레코드를 삭제 처리. DeepAgents RemoveMessage 패턴 대응.",
+        description="If True, marks record as deleted. Matches deepagents RemoveMessage pattern.",
     )
 
     def to_dict(self) -> Dict[str, Any]:
@@ -68,71 +68,71 @@ class ExecutionRecord(BaseModel):
 
 
 # ---------------------------------------------------------------------------
-# 2. Delta Reducer — DeepAgents _messages_delta_reducer 패턴 순수 구현
-#    원본: libs/deepagents/deepagents/_messages_reducer.py
-#    핵심: ID dedup + tombstone 삭제 + batch reduce
+# 2. Delta Reducer — Pure implementation of deepagents _messages_delta_reducer
+#    Original: libs/deepagents/deepagents/_messages_reducer.py
+#    Core: ID dedup + tombstone deletion + batch reduce
 # ---------------------------------------------------------------------------
 
 def _execution_delta_reducer(
     state: List[ExecutionRecord] | None,
     writes: List[ExecutionRecord],
 ) -> List[ExecutionRecord]:
-    """ID 기반 upsert/tombstone 배치 리듀서.
+    """ID-based upsert/tombstone batch reducer.
 
-    DeepAgents의 `_messages_delta_reducer`에서 개념 추출:
-      - 동일 record_id → 최신으로 덮어씀 (upsert)
-      - tombstone=True → 해당 레코드 삭제
-      - state=None → 초기 상태(빈 리스트)로 리셋
+    Extracted from deepagents `_messages_delta_reducer`:
+      - Same record_id -> overwrites with latest (upsert)
+      - tombstone=True -> deletes the record
+      - state=None -> resets to initial empty list
 
     Why not use add_messages style:
-      우리는 순서 보장보다 ID 무결성과 중복 방지가 중요하므로
-      dict 기반 upsert가 LangGraph의 dedup 방식보다 적합.
+      We prioritize ID integrity and deduplication over strict sequencing.
+      A dict-based upsert is more suitable than LangGraph's list dedup.
     """
     if state is None:
         state = []
 
-    # 기존 상태를 ID 기반 dict로 변환 (O(n) lookup → O(1))
+    # Convert state to dict for O(1) lookup
     state_by_id: Dict[str, ExecutionRecord] = {r.record_id: r for r in state}
 
     for record in writes:
         if record.tombstone:
-            # tombstone=True → 해당 레코드 삭제 (DeepAgents RemoveMessage 대응)
+            # tombstone=True -> delete the record
             state_by_id.pop(record.record_id, None)
         else:
-            # upsert: 동일 ID면 최신 결과로 덮어씀
+            # upsert -> overwrite with latest record
             state_by_id[record.record_id] = record
 
-    # 타임스탬프 기준 정렬 유지
+    # Keep sorted by timestamp
     return sorted(state_by_id.values(), key=lambda r: r.timestamp)
 
 
 # ---------------------------------------------------------------------------
-# 3. Persistent Memory Store — DeepAgents pluggable backends 패턴 대응
-#    원본 개념: libs/deepagents/deepagents/backends/
-#    구현: 로컬 JSON 파일 기반 (외부 DB 의존성 제로)
+# 3. Persistent Memory Store — Matches deepagents pluggable backends pattern
+#    Original Concept: libs/deepagents/deepagents/backends/
+#    Implementation: Local JSON-based store (zero external DB dependency)
 # ---------------------------------------------------------------------------
 
 class MinerMemoryStore:
-    """마이너 실행 이력 영속 저장소.
+    """Persistent storage for miner execution history.
 
-    DeepAgents의 pluggable store backends 개념을 단순화하여
-    로컬 JSON 파일 기반으로 구현. 외부 Redis/DB 의존성 없음.
+    Simplifies deepagents' pluggable store backends by utilizing
+    a local JSON file. No external Redis/DB dependencies required.
 
-    크로스세션 동작:
-      - 프로세스 재시작 후에도 이전 실행 이력 로드
-      - task_input_hash 기반으로 동일 태스크 캐시 히트
+    Cross-session behavior:
+      - Loads previous execution records on process restart.
+      - Resolves cache hits via task_input_hash.
 
-    Why JSON (not SQLite/Redis):
-      - 의존성 제로 — 어떤 환경에서도 즉시 동작
-      - 마이너 실행 이력은 수천 건 이하이므로 JSON이 충분히 빠름
-      - 추후 Redis 백엔드로 교체 시 이 클래스만 수정하면 됨 (SRP)
+    Why JSON (instead of SQLite/Redis):
+      - Zero dependencies — works out-of-the-box in any environment.
+      - Fast enough for typical miner history sizes (< 10k records).
+      - Easily swappable with a Redis backend in the future (SRP).
     """
 
     def __init__(self, store_path: Optional[str] = None) -> None:
         """
         Args:
-            store_path: JSON 저장 파일 경로. None이면 환경변수
-                        SURFCLAW_MEMORY_PATH 또는 기본 경로 사용.
+            store_path: Path to target JSON file. If None, uses SURFCLAW_MEMORY_PATH
+                        or defaults to the scratch directory.
         """
         if store_path is None:
             store_path = os.environ.get(
@@ -148,12 +148,12 @@ class MinerMemoryStore:
     # ------------------------------------------------------------------
 
     def upsert(self, record: ExecutionRecord) -> None:
-        """실행 레코드를 저장소에 upsert (기존 ID이면 덮어씀)."""
+        """Upserts an execution record into the store."""
         self._state = _execution_delta_reducer(self._state, [record])
         self._flush()
 
     def remove(self, record_id: str) -> None:
-        """특정 레코드를 tombstone 방식으로 삭제."""
+        """Removes a record using the tombstone pattern."""
         tombstone = ExecutionRecord(
             record_id=record_id,
             task_input_hash="__tombstone__",
@@ -164,16 +164,16 @@ class MinerMemoryStore:
         self._flush()
 
     def lookup_by_task(self, task_input_hash: str) -> Optional[ExecutionRecord]:
-        """동일 task_input_hash의 최근 성공 실행 결과를 반환.
+        """Returns the most recent successful execution for a given task hash.
 
-        캐시 히트 시 마이너가 재실행 없이 즉시 응답 가능.
-        단, 24시간 이상 오래된 캐시는 무효 처리 (스테일 데이터 방지).
+        Allows immediate response on cache hit without re-running the miner.
+        Invalidates cache records older than 24 hours to prevent stale data.
         """
-        MAX_CACHE_AGE_SECONDS = 86_400  # 24h — 스테일 캐시 TTL
+        MAX_CACHE_AGE_SECONDS = 86_400  # 24h cache TTL
 
         now = time.time()
         candidates = [
-            r for r in reversed(self._state)  # 최신 우선
+            r for r in reversed(self._state)  # Recent first
             if r.task_input_hash == task_input_hash
             and r.success
             and not r.tombstone
@@ -182,19 +182,19 @@ class MinerMemoryStore:
         return candidates[0] if candidates else None
 
     def get_recent(self, n: int = 20) -> List[ExecutionRecord]:
-        """최근 n개 실행 이력 반환 (Validator 이상 탐지용)."""
+        """Returns the last n execution records (for validator audit/checks)."""
         return list(reversed(self._state))[:n]
 
     def clear_all(self) -> None:
-        """전체 상태 초기화 (DeepAgents REMOVE_ALL_MESSAGES 대응)."""
+        """Clears all records in the store (Matches deepagents REMOVE_ALL_MESSAGES)."""
         self._state = []
         self._flush()
 
     def stats(self) -> Dict[str, Any]:
-        """저장소 통계 (NaN/Infinity 안전 처리 포함)."""
+        """Returns store telemetry statistics with safety guardrails."""
         total = len(self._state)
         successes = sum(1 for r in self._state if r.success)
-        # NaN 방지: total이 0이면 success_rate는 0.0으로 안전 리셋
+        # NaN defense: safety fallback to 0.0 if total is 0
         success_rate = (successes / total) if total > 0 else 0.0
         avg_time = (
             sum(r.execution_time for r in self._state) / total
@@ -213,48 +213,45 @@ class MinerMemoryStore:
     # ------------------------------------------------------------------
 
     def _load(self) -> List[ExecutionRecord]:
-        """JSON 파일에서 상태 로드. 파일 없거나 손상 시 빈 리스트 반환."""
+        """Loads state from the JSON file. Returns empty list if missing/corrupt."""
         if not self._path.exists():
             return []
         try:
             raw = json.loads(self._path.read_text(encoding="utf-8"))
             return [ExecutionRecord.from_dict(item) for item in raw]
         except (json.JSONDecodeError, KeyError, TypeError) as exc:
-            # Crash-Early: 손상된 캐시는 경고 후 빈 상태로 리셋
+            # Crash-Early: reset corrupted file and log warning
             import logging
             logging.getLogger(__name__).warning(
-                "MinerMemoryStore: 손상된 캐시 파일 감지 (%s). 빈 상태로 초기화: %s",
+                "MinerMemoryStore: Corrupted cache detected (%s). Resetting: %s",
                 self._path, exc,
             )
             return []
 
     def _flush(self) -> None:
-        """현재 상태를 JSON 파일에 원자적으로 저장.
-
-        임시 파일에 먼저 쓴 후 rename으로 교체 → 파일 손상 방지 (멱등성 보장).
-        """
+        """Atomically saves state to the JSON file using a temp file."""
         tmp_path = self._path.with_suffix(".tmp")
         try:
             data = [r.to_dict() for r in self._state]
             tmp_path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
-            tmp_path.replace(self._path)  # 원자적 교체
+            tmp_path.replace(self._path)  # Atomic rename swap
         except OSError as exc:
             import logging
             logging.getLogger(__name__).error(
-                "MinerMemoryStore: 캐시 플러시 실패: %s", exc
+                "MinerMemoryStore: Flush failed: %s", exc
             )
 
 
 # ---------------------------------------------------------------------------
-# 4. 태스크 해시 유틸 (캐시 키 생성)
+# 4. Task Hash Utility
 # ---------------------------------------------------------------------------
 
 def compute_task_hash(task_input: str, agent_name: str) -> str:
-    """task_input + agent_name 조합의 SHA256 해시를 반환.
+    """Returns SHA256 of combined agent_name and task_input.
 
     Why include agent_name:
-      동일한 task_input이라도 다른 에이전트면 다른 실행 결과이므로
-      agent_name을 함께 해싱하여 캐시 충돌 방지.
+      Different agents might produce different outputs for the same task.
+      Including the agent name prevents cross-agent cache collisions.
     """
     import hashlib
     payload = f"{agent_name}::{task_input}"
@@ -262,7 +259,7 @@ def compute_task_hash(task_input: str, agent_name: str) -> str:
 
 
 # ---------------------------------------------------------------------------
-# 5. 모듈 셀프 테스트 (python -m template.memory 로 실행 가능)
+# 5. Module Self Test
 # ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
@@ -270,49 +267,49 @@ if __name__ == "__main__":
     import logging
     logging.basicConfig(level=logging.INFO)
 
-    print("=== MinerMemoryStore 셀프 테스트 (DeepAgents 패턴 검증) ===\n")
+    print("=== MinerMemoryStore Self Test (Validating deepagents pattern) ===\n")
 
     with tempfile.TemporaryDirectory() as tmpdir:
         store = MinerMemoryStore(store_path=f"{tmpdir}/test_memory.json")
 
-        # 1. 기본 upsert
-        h1 = compute_task_hash("분석해줘", "surfclaw-agent")
+        # 1. Basic upsert
+        h1 = compute_task_hash("analyze_this", "surfclaw-agent")
         r1 = ExecutionRecord(
             task_input_hash=h1,
             agent_name="surfclaw-agent",
-            response_output="분석 결과 A",
+            response_output="analysis result A",
             execution_time=1.23,
             success=True,
         )
         store.upsert(r1)
-        print(f"[1] upsert 완료: {r1.record_id[:8]}...")
+        print(f"[1] Upsert complete: {r1.record_id[:8]}...")
 
-        # 2. 동일 hash 캐시 히트
+        # 2. Cache hit for same task hash
         hit = store.lookup_by_task(h1)
-        assert hit is not None, "캐시 히트 실패!"
-        assert hit.response_output == "분석 결과 A"
-        print(f"[2] 캐시 히트 ✅: {hit.response_output}")
+        assert hit is not None, "Cache lookup failed!"
+        assert hit.response_output == "analysis result A"
+        print(f"[2] Cache hit verified ✅: {hit.response_output}")
 
-        # 3. ID dedup — 동일 record_id로 덮어쓰기
-        r1_updated = r1.model_copy(update={"response_output": "분석 결과 A (갱신)", "execution_time": 0.5})
+        # 3. ID dedup — upserting with same record_id overwrites
+        r1_updated = r1.model_copy(update={"response_output": "analysis result A (updated)", "execution_time": 0.5})
         store.upsert(r1_updated)
-        assert len(store._state) == 1, "dedup 실패: 중복 레코드 생성됨!"
-        print(f"[3] ID dedup ✅: 레코드 수={len(store._state)}")
+        assert len(store._state) == 1, "Dedup failed! Duplicate record created."
+        print(f"[3] ID dedup verified ✅: Record count={len(store._state)}")
 
-        # 4. tombstone 삭제
+        # 4. Tombstone removal
         store.remove(r1.record_id)
-        assert store.lookup_by_task(h1) is None, "tombstone 삭제 실패!"
-        print(f"[4] tombstone 삭제 ✅")
+        assert store.lookup_by_task(h1) is None, "Tombstone removal failed!"
+        print(f"[4] Tombstone removal verified ✅")
 
-        # 5. 통계 (NaN 안전 확인)
+        # 5. Telemetry stats (NaN safety audit)
         stats = store.stats()
-        assert stats["success_rate"] == 0.0  # 빈 상태
-        print(f"[5] 통계 NaN 안전 ✅: {stats}")
+        assert stats["success_rate"] == 0.0  # Should be empty
+        print(f"[5] Stats NaN-safety verified ✅: {stats}")
 
         # 6. clear_all
         store.upsert(r1)
         store.clear_all()
         assert len(store._state) == 0
-        print(f"[6] clear_all ✅")
+        print(f"[6] clear_all verified ✅")
 
-    print("\n✅ 모든 셀프 테스트 통과! DeepAgents 패턴 Surfclaw 이식 완료.")
+    print("\n✅ All tests passed! deepagents patterns successfully integrated into Surfclaw.")
