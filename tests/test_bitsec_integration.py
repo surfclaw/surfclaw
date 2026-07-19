@@ -32,7 +32,6 @@ class TestBitsecIntegration(unittest.TestCase):
         fixed_str = PySapParser.parse_json(broken_vulnerability_json)
         print(f"[TEST] Repaired JSON from Rust Parser: {fixed_str}")
         
-        # 필드 존재성 검증 (BAML assert)
         PySapParser.assert_field(fixed_str, "prediction", "boolean")
         PySapParser.assert_field(fixed_str, "vulnerabilities", "array")
         print("[TEST] BAML Asset Type Assertions: PASSED")
