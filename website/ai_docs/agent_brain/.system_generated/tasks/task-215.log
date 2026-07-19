@@ -1,5 +1,0 @@
-Successfully scheduled one-shot timer.
-Expected to fire at: 2026-06-14T15:38:37+09:00
-Prompt: Check Vercel CLI version check progress again
-
-[2026-06-14T15:38:33+09:00] Timer cancelled: agent received a message during wait.
