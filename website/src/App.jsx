@@ -726,6 +726,54 @@ _`;
               </div>
             </div>
 
+            {/* Interactive Integration Manual */}
+            <div style={{ border: '1.5px solid rgba(0, 240, 255, 0.2)', padding: '2rem', background: 'rgba(0, 240, 255, 0.01)', marginTop: '1.5rem' }}>
+              <div style={{ fontSize: '0.75rem', color: '#00f0ff', letterSpacing: '0.1em', marginBottom: '0.5rem' }}>// PRODUCTION INSTALLATION & INTEGRATION MANUAL</div>
+              <div style={{ fontSize: '1.5rem', fontWeight: 'bold', letterSpacing: '1px', marginBottom: '1.5rem' }}>QUICK START & API SPECIFICATION</div>
+              
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', fontSize: '0.8rem', lineHeight: 1.6 }}>
+                <div>
+                  <span style={{ fontWeight: 'bold', color: '#00f0ff' }}>STEP 1: CLONE & NATIVE BUILD (LINUX PRODUCTION)</span>
+                  <div style={{ background: '#111', padding: '1rem', fontFamily: 'monospace', color: '#10b981', marginTop: '0.5rem', border: '1px solid rgba(255,255,255,0.05)' }}>
+                    $ git clone https://github.com/surfclaw/surfclaw.git<br />
+                    $ cd surfclaw<br />
+                    $ bash setup.sh
+                  </div>
+                  <span style={{ fontSize: '0.7rem', opacity: 0.5 }}>* Installs Rust toolchain, builds native surfclaw_core Python bindings automatically.</span>
+                </div>
+
+                <div>
+                  <span style={{ fontWeight: 'bold', color: '#00f0ff' }}>STEP 2: RUN ACCELERATED MINER</span>
+                  <div style={{ background: '#111', padding: '1rem', fontFamily: 'monospace', color: '#10b981', marginTop: '0.5rem', border: '1px solid rgba(255,255,255,0.05)' }}>
+                    $ python neurons/miner.py --netuid 60 --wallet.name default --wallet.hotkey active_miner_01
+                  </div>
+                  <span style={{ fontSize: '0.7rem', opacity: 0.5 }}>* Activates async queue scheduler, bypassing GIL limitations for fast validator queries.</span>
+                </div>
+
+                <div>
+                  <span style={{ fontWeight: 'bold', color: '#00f0ff' }}>STEP 3: CUSTOM MINER PYTHON INTEGRATION API</span>
+                  <p style={{ opacity: 0.7, margin: '0.5rem 0' }}>
+                    Import Surfclaw's cache store and auto-healing parser directly inside your own custom synapse code:
+                  </p>
+                  <pre style={{ background: '#111', padding: '1rem', fontFamily: 'monospace', color: '#a855f7', overflowX: 'auto', fontSize: '0.75rem', border: '1px solid rgba(255,255,255,0.05)', whiteSpace: 'pre' }}>
+{`from template.memory import MinerMemoryStore
+from surfclaw_core import SapParser
+
+# Initialize the cache memory store
+store = MinerMemoryStore(filepath="miner_cache.json")
+
+# Self-heal syntax formatting anomalies in synapse payload
+raw_json = synapse.response_data
+healed_json = SapParser.heal_format(raw_json)
+
+# Check query cache (Avg Latency: 0.001s)
+cache_key = store.generate_hash(healed_json)
+if store.has(cache_key):
+    return store.get(cache_key)`}
+                  </pre>
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>
