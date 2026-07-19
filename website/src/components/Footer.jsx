@@ -20,18 +20,26 @@ export default function Footer() {
         {/* Left Column: Brand */}
         <div style={{ maxWidth: '380px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-            <span style={{
-              fontWeight: 900,
-              fontSize: '1.4rem',
-              letterSpacing: '-0.04em',
-              background: 'linear-gradient(135deg, #ffffff 40%, #00f0ff 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              textShadow: '0 0 15px rgba(0, 240, 255, 0.2)',
-              fontFamily: 'var(--font-heading)'
-            }}>
-              Surfclaw
-            </span>
+            <img 
+              src="/logo.png" 
+              alt="Surfclaw Logo" 
+              style={{
+                width: '28px',
+                height: '28px',
+                borderRadius: '6px',
+                border: '1px solid rgba(0, 240, 255, 0.3)',
+                boxShadow: '0 0 10px rgba(0, 240, 255, 0.2)'
+              }} 
+            />
+            <img 
+              src="/text_logo.png" 
+              alt="surfclaw" 
+              style={{
+                height: '18px',
+                objectFit: 'contain',
+                verticalAlign: 'middle'
+              }} 
+            />
           </div>
           
           <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.85rem', lineHeight: 1.5, marginBottom: '20px' }}>
@@ -52,9 +60,17 @@ export default function Footer() {
           <div>
             <h4 style={{ color: '#fff', fontSize: '0.9rem', marginBottom: '16px', fontFamily: 'var(--font-heading)' }}>Ecosystem</h4>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '0.85rem' }}>
-              <a href="https://github.com/surfclaw/surfclaw" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--color-text-secondary)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <a href="https://github.com/" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--color-text-secondary)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
                 GitHub <ExternalLink size={12} />
               </a>
+            </div>
+          </div>
+
+          {/* Social */}
+          <div>
+            <h4 style={{ color: '#fff', fontSize: '0.9rem', marginBottom: '16px', fontFamily: 'var(--font-heading)' }}>Socials</h4>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '0.85rem' }}>
+              <a href="https://x.com/" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--color-text-secondary)', textDecoration: 'none' }}>Twitter / X</a>
             </div>
           </div>
         </div>
