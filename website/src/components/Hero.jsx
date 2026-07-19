@@ -39,15 +39,16 @@ export default function Hero() {
         filter: 'drop-shadow(0 0 35px rgba(0, 240, 255, 0.35))'
       }}>
         <img 
-          src="/surfing_claw_animated.gif" 
-          alt="Surfclaw Surfer Lobster" 
+          src="/surfclaw_tech_cyber_lobster.png" 
+          alt="Surfclaw Cybernetic Blueprint" 
           style={{
-            width: '280px',
-            height: '280px',
+            width: '320px',
+            height: '320px',
             objectFit: 'contain',
-            borderRadius: '24px',
-            border: '2px solid rgba(0, 240, 255, 0.25)',
-            boxShadow: '0 8px 32px 0 rgba(0, 240, 255, 0.15)'
+            borderRadius: '16px',
+            border: '1px dashed rgba(0, 240, 255, 0.4)',
+            boxShadow: '0 0 30px rgba(0, 240, 255, 0.15)',
+            background: '#000'
           }}
         />
       </div>
