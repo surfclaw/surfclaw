@@ -42,7 +42,7 @@ export default function Roadmap() {
   return (
     <section id="roadmap" style={{
       maxWidth: '1200px',
-      margin: '80px auto 0 auto',
+      margin: '0 auto 0 auto',
       padding: '0 24px'
     }}>
       <div style={{ textAlign: 'center', marginBottom: '50px' }}>
