@@ -452,6 +452,56 @@ _`;
               </div>
             </div>
 
+            {/* Priority 1: Large & Bold Paradigm Shift Table */}
+            <div style={{ 
+              border: '2px solid #00f0ff', 
+              padding: '2.5rem', 
+              background: 'rgba(0, 240, 255, 0.03)', 
+              boxShadow: '0 0 30px rgba(0, 240, 255, 0.15)',
+              borderRadius: '4px'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                <span style={{ color: '#00f0ff', fontSize: '0.95rem', fontWeight: 'bold', letterSpacing: '2px' }}>// THE PARADIGM SHIFT: BEFORE VS AFTER</span>
+                <span style={{ fontSize: '0.7rem', color: '#10b981', background: 'rgba(16, 185, 129, 0.1)', border: '1px solid #10b981', padding: '3px 8px', letterSpacing: '1px', fontWeight: 'bold' }}>VERIFIED BENCHMARKS</span>
+              </div>
+              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.9rem', lineHeight: 1.8 }}>
+                <thead>
+                  <tr style={{ borderBottom: '2px solid rgba(255, 255, 255, 0.2)', color: 'rgba(255, 255, 255, 0.5)', fontSize: '0.75rem', letterSpacing: '1px' }}>
+                    <th style={{ padding: '12px 6px' }}>METRIC</th>
+                    <th style={{ padding: '12px 6px' }}>LEGACY PYTHON (BEFORE)</th>
+                    <th style={{ padding: '12px 6px', color: '#00f0ff' }}>SURFCLAW 2.0 (AFTER)</th>
+                    <th style={{ padding: '12px 6px', textAlign: 'right' }}>EMISSIONS IMPACT</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.08)' }}>
+                    <td style={{ padding: '14px 6px', fontWeight: 'bold' }}>Average Latency</td>
+                    <td style={{ padding: '14px 6px', color: '#f87171', textDecoration: 'line-through' }}>385.9ms</td>
+                    <td style={{ padding: '14px 6px', color: '#10b981', fontWeight: 'bold', fontSize: '1.1rem' }}>109.7ms</td>
+                    <td style={{ padding: '14px 6px', textAlign: 'right', color: '#10b981', fontWeight: 'bold' }}>⚡ 3.5x Performance Gain</td>
+                  </tr>
+                  <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.08)' }}>
+                    <td style={{ padding: '14px 6px', fontWeight: 'bold' }}>GPU VRAM Stability</td>
+                    <td style={{ padding: '14px 6px', color: '#f87171' }}>Frequent OOM Crashes</td>
+                    <td style={{ padding: '14px 6px', color: '#10b981', fontWeight: 'bold' }}>0% Crashes (FIFO Queue)</td>
+                    <td style={{ padding: '14px 6px', textAlign: 'right', color: '#10b981', fontWeight: 'bold' }}>🛡️ 99.9% Node Uptime Yield</td>
+                  </tr>
+                  <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.08)' }}>
+                    <td style={{ padding: '14px 6px', fontWeight: 'bold' }}>Format Resiliency</td>
+                    <td style={{ padding: '14px 6px', color: '#f87171' }}>Syntax Error Prunings</td>
+                    <td style={{ padding: '14px 6px', color: '#10b981', fontWeight: 'bold' }}>100% Recovery (SapParser)</td>
+                    <td style={{ padding: '14px 6px', textAlign: 'right', color: '#10b981', fontWeight: 'bold' }}>🎉 Zero Timeout Penalties</td>
+                  </tr>
+                  <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.08)' }}>
+                    <td style={{ padding: '14px 6px', fontWeight: 'bold' }}>Execution Security</td>
+                    <td style={{ padding: '14px 6px', color: '#f87171' }}>Exposed Mnemonic Keys</td>
+                    <td style={{ padding: '14px 6px', color: '#10b981', fontWeight: 'bold' }}>Isolated Firecracker VM</td>
+                    <td style={{ padding: '14px 6px', textAlign: 'right', color: '#10b981', fontWeight: 'bold' }}>🔒 Anti-RCE Sandboxed</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', border: '1px solid rgba(255, 255, 255, 0.1)', padding: '2rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px dotted rgba(255, 255, 255, 0.2)', paddingBottom: '0.5rem' }}>
                 <span style={{ color: 'rgba(255, 255, 255, 0.5)' }}>WORKLOAD TEMPLATE</span>
@@ -526,47 +576,6 @@ _`;
               {demoLogs.map((log, i) => (
                 <div key={i} style={{ color: log?.color || '#ffffff', marginBottom: '0.25rem', lineHeight: 1.4 }}>{log?.text || ''}</div>
               ))}
-            </div>
-
-            {/* Paradigm Shift Table */}
-            <div style={{ border: '1px solid rgba(0, 240, 255, 0.2)', padding: '1.5rem', background: 'rgba(0, 240, 255, 0.02)', fontSize: '0.8rem' }}>
-              <div style={{ color: '#00f0ff', marginBottom: '1rem', fontSize: '0.85rem', fontWeight: 'bold' }}>// THE PARADIGM SHIFT: BEFORE VS AFTER</div>
-              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', lineHeight: 1.6 }}>
-                <thead>
-                  <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.15)', color: 'rgba(255, 255, 255, 0.6)', fontSize: '0.75rem' }}>
-                    <th style={{ padding: '8px 4px' }}>METRIC</th>
-                    <th style={{ padding: '8px 4px' }}>LEGACY PYTHON</th>
-                    <th style={{ padding: '8px 4px', color: '#00f0ff' }}>SURFCLAW 2.0</th>
-                    <th style={{ padding: '8px 4px', textAlign: 'right' }}>EMISSIONS IMPACT</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
-                    <td style={{ padding: '8px 4px', fontWeight: 'bold' }}>Avg Latency</td>
-                    <td style={{ padding: '8px 4px', color: '#ef4444' }}>385.9ms</td>
-                    <td style={{ padding: '8px 4px', color: '#10b981' }}>109.7ms</td>
-                    <td style={{ padding: '8px 4px', textAlign: 'right', color: '#10b981' }}>3.5x Latency Saved</td>
-                  </tr>
-                  <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
-                    <td style={{ padding: '8px 4px', fontWeight: 'bold' }}>VRAM OOM Error</td>
-                    <td style={{ padding: '8px 4px', color: '#ef4444' }}>Frequent Crashes</td>
-                    <td style={{ padding: '8px 4px', color: '#10b981' }}>0% (Allocated Queues)</td>
-                    <td style={{ padding: '8px 4px', textAlign: 'right', color: '#10b981' }}>99.9% Uptime Yield</td>
-                  </tr>
-                  <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
-                    <td style={{ padding: '8px 4px', fontWeight: 'bold' }}>Format Resiliency</td>
-                    <td style={{ padding: '8px 4px', color: '#ef4444' }}>0.0% (JSON Mismatch)</td>
-                    <td style={{ padding: '8px 4px', color: '#10b981' }}>100.0% (Healed &lt;2µs)</td>
-                    <td style={{ padding: '8px 4px', textAlign: 'right', color: '#10b981' }}>Zero Score Penalty</td>
-                  </tr>
-                  <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
-                    <td style={{ padding: '8px 4px', fontWeight: 'bold' }}>Node Security</td>
-                    <td style={{ padding: '8px 4px', color: '#ef4444' }}>Exposed Host Keys</td>
-                    <td style={{ padding: '8px 4px', color: '#10b981' }}>Isolated Firecracker VM</td>
-                    <td style={{ padding: '8px 4px', textAlign: 'right', color: '#10b981' }}>Anti-RCE Secured</td>
-                  </tr>
-                </tbody>
-              </table>
             </div>
           </div>
         )}
